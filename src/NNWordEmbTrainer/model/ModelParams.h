@@ -13,9 +13,9 @@ public:
 	bool initial(HyperParams& opts, AlignedMemoryPool* mem = NULL){
 		// some model parameters should be initialized outside
 		if (words.nVSize <= 0){
+			cout << "words size is error" << endl;
 			return false;
 		}
-		opts.wordDim = words.nDim;
 		olayer_linear.initial(opts.labelSize, 2 * opts.wordDim, false, mem);
 		return true;
 	}

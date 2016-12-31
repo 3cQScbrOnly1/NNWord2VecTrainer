@@ -27,6 +27,7 @@ public:
 		adaAlpha = opt.adaAlpha;
 		adaEps = opt.adaEps;
 		labelSize = 2;
+		wordDim = opt.wordEmbSize;
 		bAssigned = true;
 	}
 
@@ -37,7 +38,10 @@ public:
 
 public:
 	void print(){
-
+		cout << "nnRegular: " << nnRegular << endl;
+		cout << "adaALpha: " << adaAlpha << endl;
+		cout << "adaEps:" << adaEps << endl;
+		cout << "wordDim:" << wordDim << endl;
 	}
 
 private:

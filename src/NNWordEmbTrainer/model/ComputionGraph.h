@@ -31,6 +31,8 @@ public:
 
 public:
 	inline void initial(ModelParams& model, HyperParams& opts, AlignedMemoryPool* mem = NULL){
+		_target_word.setParam(&model.words);
+		_context_word.setParam(&model.words);
 		_target_word.init(opts.wordDim, -1, mem);
 		_context_word.init(opts.wordDim, -1, mem);
 		_concat.init(opts.wordDim + opts.wordDim, -1, mem);
