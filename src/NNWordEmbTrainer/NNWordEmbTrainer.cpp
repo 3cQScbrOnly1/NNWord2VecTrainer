@@ -4,7 +4,7 @@
 
 Trainer::Trainer(int memsize):m_driver(memsize){
 	instances_count = 0;
-	buffer_size = 10;
+	buffer_size = 20;
 	context_size = 2;
 	error_size = 5;
 	table_size = 1e6;
@@ -154,9 +154,11 @@ void Trainer:: convert2Example(const Instance* pInstance, vector<Example>& vecEx
 				exam.m_feature.context_word = words[idx + offset];
 			exam.is_positive();
 			vecExams.push_back(exam);
-		}
-		for (int i = 0; i < error_size; i++) {
-
+			neg_words.clear();
+			createNegWord(exam.m_feature.context_word, neg_words);
+			neg_exams.clear();
+			createNegExamples(exam.m_feature.target_word, neg_words, neg_exams);
+			vecExams.insert(vecExams.end(), neg_exams.begin(), neg_exams.end());
 		}
 	}
 }
