@@ -32,8 +32,8 @@ public:
 	}
 
 
-	void saveModel(){
-
+	void saveModel(std::ofstream &os) {
+		words.saveEmb(os);
 	}
 
 	void loadModel(const string& inFile){

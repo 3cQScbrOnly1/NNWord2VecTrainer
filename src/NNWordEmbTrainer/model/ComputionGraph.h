@@ -3,7 +3,6 @@
 
 #include "ModelParams.h"
 
-
 // Each model consists of two parts, building neural graph and defining output losses.
 struct ComputionGraph : Graph{
 public:

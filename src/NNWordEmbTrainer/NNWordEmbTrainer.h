@@ -40,8 +40,9 @@ public:
 	void train(const string& trainFile, const string& modelFile, const string& optionFile);
 	void convert2Example(const Instance* pInstance, vector<Example>& exam);
 	void trainEmb(const string& trainFile);
-	void trainInstances(const vector<Instance>& vecInst);
+	dtype trainInstances(const vector<Instance>& vecInst);
 	void createRandomTable();
 	void createNegWord(const string& context_word, vector<string>& neg_words);
 	void createNegExamples(const string& target_word, const vector<string>& neg_words, vector<Example>& neg_exams);
+	void writeModelFile(const string& outputModelFile);
 };

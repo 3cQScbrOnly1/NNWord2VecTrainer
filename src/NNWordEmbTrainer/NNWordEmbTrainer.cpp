@@ -4,10 +4,10 @@
 
 Trainer::Trainer(int memsize):m_driver(memsize){
 	instances_count = 0;
-	buffer_size = 20;
+	buffer_size = 100;
 	context_size = 2;
 	error_size = 5;
-	table_size = 1e6;
+	table_size = 1e8;
 	neg_word_size = 5;
 	table = new int[table_size];
 	START = "<s>";
@@ -52,6 +52,7 @@ void Trainer::createRandomTable(){
 		cout << "error wordAlpha in modelparam " << endl;
 		return;
 	}
+	// copy m_word_stats;
 	for (unordered_map<string, int>::iterator it = m_word_stats.begin();
 		it != m_word_stats.end(); it++) {
 		m_word_vect.push_back(make_pair(it->first, it->second));
@@ -69,15 +70,15 @@ void Trainer::createRandomTable(){
 			i++;
 			d1 += pow(m_word_vect[i].second, power) / train_words_pow;
 		}
-		if (i >= vocab_size) i = vocab_size - 1;
+		if (i >= vocab_size)
+			i = vocab_size - 1;
 	}
 }
 
 void Trainer::createNegWord(const string& context_word, vector<string>& neg_words){
 	neg_words.clear();
 	int random_index, word_index;
-	for (int i = 0; i < neg_word_size; i++)
-	{
+	for (int i = 0; i < neg_word_size; i++) {
 		random_index = rand() % table_size;
 		word_index = table[random_index];
 		if (word_index >= m_word_stats.size() || word_index < 0) {
@@ -94,7 +95,7 @@ void Trainer::createNegWord(const string& context_word, vector<string>& neg_word
 void Trainer::createNegExamples(const string& target_word, const vector<string>& neg_words, vector<Example>& neg_exams){
 	neg_exams.clear();
 	int neg_exam_size = neg_words.size();
-	for (int i = 0; i < neg_exam_size; i++){
+	for (int i = 0; i < neg_exam_size; i++) {
 		Example exam;
 		exam.m_feature.target_word = target_word;
 		exam.m_feature.context_word = neg_words[i];
@@ -174,11 +175,27 @@ void Trainer::train(const string& trainFile, const string& modelFile, const stri
 	m_driver.initial();
 	createRandomTable();
 	trainEmb(trainFile);
+	cout << "Saving model..." << endl;
+	writeModelFile(modelFile);
+	cout << "Save complete!" << endl;
 }
 
-void Trainer::trainInstances(const vector<Instance>& vecInst){
+void Trainer::writeModelFile(const string& outputModelFile) {
+	ofstream os(outputModelFile);
+	if (os.is_open())
+	{
+		m_driver._modelparams.saveModel(os);
+	}
+	else
+	{
+		cout << "write model error." << endl;
+	}
+}
+
+dtype Trainer::trainInstances(const vector<Instance>& vecInst){
 	int vecSize = vecInst.size();
 	int examSize;
+	dtype cost = 0;
 	vector<Example> exams;
 	static vector<Example> subExamples;
 	for (int idx = 0; idx < vecSize; idx++) {
@@ -186,14 +203,13 @@ void Trainer::trainInstances(const vector<Instance>& vecInst){
 		convert2Example(&vecInst[idx], exams);
 		examSize = exams.size();
 		for (int idy = 0; idy < examSize; idy++) {
-			dtype cost = 0;
 			subExamples.clear();
 			subExamples.push_back(exams[idy]);
 			cost += m_driver.train(subExamples, 1);
 			m_driver.updateModel();
-			cout << "Cost: " << cost << endl;
 		}
 	}
+	return cost;
 }
 
 void Trainer::trainEmb(const string& trainFile){
@@ -201,18 +217,27 @@ void Trainer::trainEmb(const string& trainFile){
 	Instance *pInstance = m_pipe.nextInstance();
 	vector<Instance> insts;
 	insts.clear();
+	dtype cost;
+	int count = 0;
 	while (pInstance) {
 		Instance trainInstance;
 		trainInstance.copyValuesFrom(*pInstance);
 		insts.push_back(trainInstance);
 		if (insts.size() == buffer_size) {
-			trainInstances(insts);
+			cost = trainInstances(insts);
+			cout << "cost: " << cost << endl;
+			cout << "count: " << count << endl;
 			insts.clear();
+			count+=buffer_size;
 		}
 		pInstance = m_pipe.nextInstance();
 	}
 	if (insts.size() != 0)
-		trainInstances(insts);
+	{
+		cost = trainInstances(insts);
+		cout << "cost: " << cost << endl;
+		cout << "count: " << count << endl;
+	}
 	m_pipe.uninitInputFile();
 }
 

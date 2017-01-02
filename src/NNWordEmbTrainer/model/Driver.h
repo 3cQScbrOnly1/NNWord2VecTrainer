@@ -72,10 +72,6 @@ public:
 			//forward
 			_pcg->forward(example.m_feature, true);
 
-			//loss function
-			//for (int idx = 0; idx < seq_size; idx++) {
-			//cost += _loss.loss(&(_pcg->_output[idx]), example.m_labels[idx], _eval, example_num);				
-			//}
 			cost += _modelparams.loss.loss(&_pcg->_output, example.m_label, _eval, example_num);
 
 			// backward, which exists only for training 
