@@ -4,7 +4,7 @@
 
 Trainer::Trainer(int memsize):m_driver(memsize){
 	instances_count = 0;
-	buffer_size = 100;
+	buffer_size = 10;
 	context_size = 2;
 	error_size = 5;
 	table_size = 1e8;
@@ -268,7 +268,6 @@ int main(int argc, char* argv[]) {
 		the_classifier.test(testFile, outputFile, modelFile);
 	}
 	*/
-	getchar();
 	//test(argv);
 	//ah.write_values(std::cout);
 }
