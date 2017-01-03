@@ -263,6 +263,7 @@ int main(int argc, char* argv[]) {
 		memsize = 0;
 	//omp_set_num_threads(thread);
 	cout << "Thread num: "<<  thread << endl;
+	omp_set_num_threads(thread);
 	Trainer the_trainer(memsize);
 	the_trainer.train(trainFile, modelFile, optionFile);
 	/*
