@@ -84,9 +84,7 @@ void Trainer::createNegWord(const string& context_word, vector<string>& neg_word
 			cout << "random error" << endl;
 			break;
 		}
-		if (vocab[word_index].first == context_word)
-			i--;
-		else
+		if (vocab[word_index].first != context_word)
 			neg_words.emplace_back(vocab[word_index].first);
 	}
 }
