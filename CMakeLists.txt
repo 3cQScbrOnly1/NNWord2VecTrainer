@@ -49,9 +49,9 @@ if (MKL OR MKL_ROOT)
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -w -msse3 -funroll-loops  -std=c++11 -O0 -pg" )
+    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -w -msse3 -funroll-loops  -std=c++11 -O0 -pg -fopenmp" )
 else()
-    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -funroll-loops -w -std=c++11 -Ofast -g -march=native" )
+    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -funroll-loops -w -std=c++11 -Ofast -g -march=native -fopenmp" )
 endif()
 add_definitions( -DEIGEN_DONT_ALIGN )
 
