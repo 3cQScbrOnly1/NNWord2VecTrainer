@@ -13,7 +13,7 @@ using namespace std;
 class Trainer{
 public:
 	unordered_map<string, int> m_word_stats;
-	vector<pair<string, int> > m_word_vect;
+	vector<pair<string, int> > vocab;
 	int instances_count;
 	int neg_word_size;
 	int buffer_size;

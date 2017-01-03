@@ -25,7 +25,7 @@ void Trainer::createWordStates(const string& file_name) {
 	while (pInstance) {
 		Instance trainInstance;
 		trainInstance.copyValuesFrom(*pInstance);
-		insts.push_back(trainInstance);
+		insts.emplace_back(trainInstance);
 		if (insts.size() == buffer_size) {
 			addWord2States(insts);
 			insts.clear();
@@ -54,20 +54,20 @@ void Trainer::createRandomTable(){
 	// copy m_word_stats;
 	for (unordered_map<string, int>::iterator it = m_word_stats.begin();
 		it != m_word_stats.end(); it++) {
-		m_word_vect.push_back(make_pair(it->first, it->second));
+		vocab.emplace_back(make_pair(it->first, it->second));
 	}
 
 	double d1, power = 0.75, train_words_pow = 0;
 	for (int idx = 0; idx < vocab_size; idx++) {
-		train_words_pow += pow(m_word_vect[idx].second , power);
+		train_words_pow += pow(vocab[idx].second , power);
 	}
 	int i = 0;
-	d1 = pow(m_word_vect[i].second, power)/ train_words_pow;
+	d1 = pow(vocab[i].second, power)/ train_words_pow;
 	for (int a = 0; a < table_size; a++) {
 		table[a] = i;
 		if (a / (double)table_size > d1) {
 			i++;
-			d1 += pow(m_word_vect[i].second, power) / train_words_pow;
+			d1 += pow(vocab[i].second, power) / train_words_pow;
 		}
 		if (i >= vocab_size)
 			i = vocab_size - 1;
@@ -84,10 +84,10 @@ void Trainer::createNegWord(const string& context_word, vector<string>& neg_word
 			cout << "random error" << endl;
 			break;
 		}
-		if (m_word_vect[word_index].first == context_word)
+		if (vocab[word_index].first == context_word)
 			i--;
 		else
-			neg_words.push_back(m_word_vect[word_index].first);
+			neg_words.emplace_back(vocab[word_index].first);
 	}
 }
 
@@ -99,7 +99,7 @@ void Trainer::createNegExamples(const string& target_word, const vector<string>&
 		exam.m_feature.target_word = target_word;
 		exam.m_feature.context_word = neg_words[i];
 		exam.is_negative();
-		neg_exams.push_back(exam);
+		neg_exams.emplace_back(exam);
 	}
 }
 
@@ -138,7 +138,7 @@ void Trainer:: convert2Example(const Instance* pInstance, vector<Example>& vecEx
 			else
 				exam.m_feature.context_word = words[idx - offset];
 			exam.is_positive();
-			vecExams.push_back(exam);
+			vecExams.emplace_back(exam);
 			neg_words.clear();
 			createNegWord(exam.m_feature.context_word, neg_words);
 			neg_exams.clear();
@@ -153,7 +153,7 @@ void Trainer:: convert2Example(const Instance* pInstance, vector<Example>& vecEx
 			else
 				exam.m_feature.context_word = words[idx + offset];
 			exam.is_positive();
-			vecExams.push_back(exam);
+			vecExams.emplace_back(exam);
 			neg_words.clear();
 			createNegWord(exam.m_feature.context_word, neg_words);
 			neg_exams.clear();
@@ -205,7 +205,7 @@ dtype Trainer::trainInstances(const vector<Instance>& vecInst){
 		examSize = exams.size();
 		for (int idy = 0; idy < examSize; idy++) {
 			subExamples.clear();
-			subExamples.push_back(exams[idy]);
+			subExamples.emplace_back(exams[idy]);
 			cost += m_driver.train(subExamples, 1);
 			m_driver.updateModel();
 		}
@@ -223,7 +223,7 @@ void Trainer::trainEmb(const string& trainFile){
 	while (pInstance) {
 		Instance trainInstance;
 		trainInstance.copyValuesFrom(*pInstance);
-		insts.push_back(trainInstance);
+		insts.emplace_back(trainInstance);
 		if (insts.size() == buffer_size) {
 			cost = trainInstances(insts);
 			cout << "cost: " << cost << endl;
