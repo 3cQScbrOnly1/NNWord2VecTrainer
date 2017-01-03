@@ -66,6 +66,7 @@ public:
 		int example_num = examples.size();
 		dtype cost = 0.0;
 
+		#pragma omp parallel for
 		for (int count = 0; count < example_num; count++) {
 			const Example& example = examples[count];
 

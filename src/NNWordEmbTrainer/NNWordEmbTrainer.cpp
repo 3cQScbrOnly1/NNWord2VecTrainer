@@ -4,18 +4,17 @@
 
 Trainer::Trainer(int memsize):m_driver(memsize){
 	instances_count = 0;
-	buffer_size = 10;
+	buffer_size = 1000;
 	context_size = 2;
 	error_size = 5;
 	table_size = 1e8;
 	neg_word_size = 5;
-	table = new int[table_size];
+	table.resize(table_size);
 	START = "<s>";
 	END = "</s>";
 }
 
 Trainer::~Trainer(){
-	delete[] table;
 }
 
 void Trainer::createWordStates(const string& file_name) {
@@ -174,7 +173,9 @@ void Trainer::train(const string& trainFile, const string& modelFile, const stri
 	m_driver._modelparams.words.initial(&m_driver._modelparams.wordAlpha, m_options.wordEmbSize, true);
 	m_driver.initial();
 	createRandomTable();
+	clock_t start_time = clock();
 	trainEmb(trainFile);
+	cout << "train cost time :"<< (clock() - start_time) / CLOCKS_PER_SEC << endl;
 	cout << "Saving model..." << endl;
 	writeModelFile(modelFile);
 	cout << "Save complete!" << endl;
@@ -232,7 +233,7 @@ void Trainer::trainEmb(const string& trainFile){
 		}
 		pInstance = m_pipe.nextInstance();
 	}
-	if (insts.size() != 0)
+	if (insts.size() > 0)
 	{
 		cost = trainInstances(insts);
 		cout << "cost: " << cost << endl;
@@ -247,17 +248,21 @@ int main(int argc, char* argv[]) {
 	std::string outputFile = "";
 	bool bTrain = false;
 	int memsize = 0;
+	int thread = 1;
 	dsr::Argument_helper ah;
 
 	ah.new_named_string("train", "trainCorpus", "named_string", "training corpus to train a model, must when training", trainFile);
 	ah.new_named_string("model", "modelFile", "named_string", "model file, must when training and testing", modelFile);
 	ah.new_named_string("option", "optionFile", "named_string", "option file to train a model, optional when training", optionFile);
 	ah.new_named_int("memsize", "memorySize", "named_int", "This argument decides the size of static memory allocation", memsize);
+	ah.new_named_int("thread", "thread num", "named_int", "The thread size", thread);
 
 	ah.process(argc, argv);
 
 	if (memsize < 0)
 		memsize = 0;
+	//omp_set_num_threads(thread);
+	cout << "Thread num: "<<  thread << endl;
 	Trainer the_trainer(memsize);
 	the_trainer.train(trainFile, modelFile, optionFile);
 	/*
@@ -268,6 +273,7 @@ int main(int argc, char* argv[]) {
 		the_classifier.test(testFile, outputFile, modelFile);
 	}
 	*/
+	getchar();
 	//test(argv);
 	//ah.write_values(std::cout);
 }

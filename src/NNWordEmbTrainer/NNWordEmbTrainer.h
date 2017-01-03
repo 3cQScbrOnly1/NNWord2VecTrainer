@@ -19,7 +19,7 @@ public:
 	int buffer_size;
 	int context_size;
 	int error_size;
-	int* table;
+	vector<int> table;
 	int table_size;
 	string START;
 	string END;
