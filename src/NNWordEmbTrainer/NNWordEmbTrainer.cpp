@@ -4,7 +4,7 @@
 
 Trainer::Trainer(int memsize, int threadnum):m_driver(memsize, threadnum){
 	instances_count = 0;
-	buffer_size = 100;
+	buffer_size = 1000;
 	context_size = 2;
 	error_size = 5;
 	table_size = 1e8;
@@ -207,7 +207,7 @@ dtype Trainer::trainInstances(const vector<Instance>& vecInst){
 		//}
 		m_driver.updateModel();
 	}
-	cout << "one buffer cost time :" << (clock() - start_time) << "/ CLOCKS_PER_SEC " << endl;
+	cout << "one buffer cost time :" << (clock() - start_time) / CLOCKS_PER_SEC  << endl;
 	return cost;
 }
 
