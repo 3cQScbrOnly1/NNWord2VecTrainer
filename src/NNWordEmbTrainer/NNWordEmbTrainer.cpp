@@ -4,7 +4,7 @@
 
 Trainer::Trainer(int memsize, int threadnum):m_driver(memsize, threadnum){
 	instances_count = 0;
-	buffer_size = 1000;
+	buffer_size = 100;
 	context_size = 2;
 	error_size = 5;
 	table_size = 1e8;
@@ -171,9 +171,7 @@ void Trainer::train(const string& trainFile, const string& modelFile, const stri
 	m_driver._modelparams.words.initial(&m_driver._modelparams.wordAlpha, m_options.wordEmbSize, true);
 	m_driver.initial();
 	createRandomTable();
-	clock_t start_time = clock();
 	trainEmb(trainFile);
-	cout << "train cost time :"<< (clock() - start_time) / CLOCKS_PER_SEC << endl;
 	cout << "Saving model..." << endl;
 	writeModelFile(modelFile);
 	cout << "Save complete!" << endl;
@@ -197,6 +195,7 @@ dtype Trainer::trainInstances(const vector<Instance>& vecInst){
 	dtype cost = 0;
 	vector<Example> exams;
 	static vector<Example> subExamples;
+	clock_t start_time = clock();
 	for (int idx = 0; idx < vecSize; idx++) {
 		exams.clear();
 		convert2Example(&vecInst[idx], exams);
@@ -205,9 +204,10 @@ dtype Trainer::trainInstances(const vector<Instance>& vecInst){
 			//subExamples.clear();
 			//subExamples.emplace_back(exams[idy]);
 		cost += m_driver.train(exams, 1);
-		m_driver.updateModel();
 		//}
+		m_driver.updateModel();
 	}
+	cout << "one buffer cost time :" << (clock() - start_time) << "/ CLOCKS_PER_SEC " << endl;
 	return cost;
 }
 
@@ -225,9 +225,9 @@ void Trainer::trainEmb(const string& trainFile){
 		if (insts.size() == buffer_size) {
 			cost = trainInstances(insts);
 			cout << "cost: " << cost << endl;
-			cout << "count: " << count << endl;
 			insts.clear();
 			count+=buffer_size;
+			cout << "count: " << count << endl;
 		}
 		pInstance = m_pipe.nextInstance();
 	}
@@ -235,6 +235,7 @@ void Trainer::trainEmb(const string& trainFile){
 	{
 		cost = trainInstances(insts);
 		cout << "cost: " << cost << endl;
+		count += buffer_size;
 		cout << "count: " << count << endl;
 	}
 	m_pipe.uninitInputFile();
@@ -262,6 +263,7 @@ int main(int argc, char* argv[]) {
 	//omp_set_num_threads(thread);
 	cout << "Thread num: "<<  thread << endl;
 	omp_set_num_threads(thread);
+
 	Trainer the_trainer(memsize, thread);
 	the_trainer.train(trainFile, modelFile, optionFile);
 	/*
@@ -272,7 +274,6 @@ int main(int argc, char* argv[]) {
 		the_classifier.test(testFile, outputFile, modelFile);
 	}
 	*/
-	getchar();
 	//test(argv);
 	//ah.write_values(std::cout);
 }

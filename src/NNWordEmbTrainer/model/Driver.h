@@ -16,12 +16,13 @@
 
 class Driver{
 public:
-	Driver(int memsize, int thread_num) :_aligned_mem(memsize), _thread_num(thread_num){
-		_pcgs.resize(_thread_num);
+	Driver(int memsize, int thread_num) :_aligned_mem(memsize) {
+		_graph_num = thread_num * 8;
+		_pcgs.resize(_graph_num);
 	}
 
 	~Driver() {
-		for (int idx = 0; idx < _thread_num; idx++)
+		for (int idx = 0; idx < _graph_num; idx++)
 		{
 			if (_pcgs[idx] != NULL)
 				delete _pcgs[idx];
@@ -37,7 +38,7 @@ public:
 	CheckGrad _checkgrad;
 	ModelUpdate _ada;  // model update
 	AlignedMemoryPool _aligned_mem;
-	int _thread_num;
+	int _graph_num;
 
 
 public:
@@ -56,7 +57,7 @@ public:
 
 		_hyperparams.print();
 
-		for (int idx = 0; idx < _thread_num; idx++)
+		for (int idx = 0; idx < _graph_num; idx++)
 		{
 			_pcgs[idx] = new ComputionGraph();
 			_pcgs[idx]->initial(_modelparams, _hyperparams, &_aligned_mem);
@@ -72,9 +73,9 @@ public:
 		int example_num = examples.size();
 		dtype cost = 0.0;
 
-		for (int count = 0; count < example_num; count += _thread_num) {
-			#pragma omp parallel for
-			for (int offset = 0; offset < _thread_num; offset++) {
+		for (int count = 0; count < example_num; count += _graph_num) {
+#pragma omp parallel for
+			for (int offset = 0; offset < _graph_num; offset++) {
 				int exam_index = offset + count;
 				if (exam_index < example_num) {
 					const Example& example = examples[exam_index];
