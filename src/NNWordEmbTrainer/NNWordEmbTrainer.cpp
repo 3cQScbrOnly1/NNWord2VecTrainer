@@ -4,7 +4,7 @@
 
 Trainer::Trainer(int memsize, int threadnum):m_driver(memsize, threadnum){
 	instances_count = 0;
-	buffer_size = 1000;
+	buffer_size = 100;
 	context_size = 2;
 	error_size = 5;
 	table_size = 1e8;
