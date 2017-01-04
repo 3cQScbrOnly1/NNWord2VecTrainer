@@ -16,18 +16,20 @@
 
 class Driver{
 public:
-	Driver(int memsize) :_aligned_mem(memsize){
-		_pcg = NULL;
+	Driver(int memsize, int thread_num) :_aligned_mem(memsize), _thread_num(thread_num){
+		_pcgs.resize(_thread_num);
 	}
 
 	~Driver() {
-		if (_pcg != NULL)
-			delete _pcg;
-		_pcg = NULL;
+		for (int idx = 0; idx < _thread_num; idx++)
+		{
+			if (_pcgs[idx] != NULL)
+				delete _pcgs[idx];
+		}
 	}
 
 public:
-	ComputionGraph *_pcg;  // build neural graphs
+	vector<ComputionGraph*> _pcgs;  // build neural graphs
 	ModelParams _modelparams;  // model parameters
 	HyperParams _hyperparams;
 
@@ -35,6 +37,7 @@ public:
 	CheckGrad _checkgrad;
 	ModelUpdate _ada;  // model update
 	AlignedMemoryPool _aligned_mem;
+	int _thread_num;
 
 
 public:
@@ -53,8 +56,11 @@ public:
 
 		_hyperparams.print();
 
-		_pcg = new ComputionGraph();
-		_pcg->initial(_modelparams, _hyperparams, &_aligned_mem);
+		for (int idx = 0; idx < _thread_num; idx++)
+		{
+			_pcgs[idx] = new ComputionGraph();
+			_pcgs[idx]->initial(_modelparams, _hyperparams, &_aligned_mem);
+		}
 
 		setUpdateParameters(_hyperparams.nnRegular, _hyperparams.adaAlpha, _hyperparams.adaEps);
 	}
@@ -66,17 +72,18 @@ public:
 		int example_num = examples.size();
 		dtype cost = 0.0;
 
-		#pragma omp parallel for
-		for (int count = 0; count < example_num; count++) {
-			const Example& example = examples[count];
-
-			//forward
-			_pcg->forward(example.m_feature, true);
-
-			cost += _modelparams.loss.loss(&_pcg->_output, example.m_label, _eval, example_num);
-
-			// backward, which exists only for training 
-			_pcg->backward();
+		for (int count = 0; count < example_num; count += _thread_num) {
+			#pragma omp parallel for
+			for (int offset = 0; offset < _thread_num; offset++) {
+				if (offset + count < example_num) {
+					const Example& example = examples[count + offset];
+					//forward
+					_pcgs[offset]->forward(example.m_feature, true);
+					cost += _modelparams.loss.loss(&_pcgs[offset]->_output, example.m_label, _eval, example_num);
+					// backward, which exists only for training 
+					_pcgs[offset]->backward();
+				} 
+			}
 		}
 
 		if (_eval.getAccuracy() < 0) {
@@ -87,23 +94,26 @@ public:
 	}
 
 	inline void predict(const Feature& feature, int& result) {
+		/*
 		_pcg->forward(feature);
 		//results.resize(seq_size);
 		//for (int idx = 0; idx < seq_size; idx++) {
 		//	_loss.predict( &(_pcg->_output[idx]), results[idx]);
 		//}
 		_modelparams.loss.predict(&_pcg->_output, result);
+		*/
 	}
 
 	inline dtype cost(const Example& example){
-		_pcg->forward(example.m_feature); //forward here
 		dtype cost = 0.0;
+		/*_pcg->forward(example.m_feature); //forward here
 		//loss function
 		//for (int idx = 0; idx < seq_size; idx++) {
 		//	cost += _loss.cost(&(_pcg->_output[idx]), example.m_labels[idx], 1);
 		//}
 		cost += _modelparams.loss.cost(&_pcg->_output, example.m_label, 1);
 
+		*/
 		return cost;
 	}
 

@@ -2,7 +2,7 @@
 
 #include "Argument_helper.h"
 
-Trainer::Trainer(int memsize):m_driver(memsize){
+Trainer::Trainer(int memsize, int threadnum):m_driver(memsize, threadnum){
 	instances_count = 0;
 	buffer_size = 1000;
 	context_size = 2;
@@ -200,13 +200,13 @@ dtype Trainer::trainInstances(const vector<Instance>& vecInst){
 	for (int idx = 0; idx < vecSize; idx++) {
 		exams.clear();
 		convert2Example(&vecInst[idx], exams);
-		examSize = exams.size();
-		for (int idy = 0; idy < examSize; idy++) {
-			subExamples.clear();
-			subExamples.emplace_back(exams[idy]);
-			cost += m_driver.train(subExamples, 1);
-			m_driver.updateModel();
-		}
+		//examSize = exams.size();
+		//for (int idy = 0; idy < examSize; idy++) {
+			//subExamples.clear();
+			//subExamples.emplace_back(exams[idy]);
+		cost += m_driver.train(exams, 1);
+		m_driver.updateModel();
+		//}
 	}
 	return cost;
 }
@@ -262,7 +262,7 @@ int main(int argc, char* argv[]) {
 	//omp_set_num_threads(thread);
 	cout << "Thread num: "<<  thread << endl;
 	omp_set_num_threads(thread);
-	Trainer the_trainer(memsize);
+	Trainer the_trainer(memsize, thread);
 	the_trainer.train(trainFile, modelFile, optionFile);
 	/*
 	if (bTrain) {
