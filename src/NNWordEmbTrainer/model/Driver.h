@@ -75,8 +75,9 @@ public:
 		for (int count = 0; count < example_num; count += _thread_num) {
 			#pragma omp parallel for
 			for (int offset = 0; offset < _thread_num; offset++) {
-				if (offset + count < example_num) {
-					const Example& example = examples[count + offset];
+				int exam_index = offset + count;
+				if (exam_index < example_num) {
+					const Example& example = examples[exam_index];
 					//forward
 					_pcgs[offset]->forward(example.m_feature, true);
 					cost += _modelparams.loss.loss(&_pcgs[offset]->_output, example.m_label, _eval, example_num);
