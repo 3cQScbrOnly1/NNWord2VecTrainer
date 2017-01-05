@@ -9,37 +9,43 @@ using namespace std;
 class Feature
 {
 public:
-	string target_word;
-	string context_word;
+	vector<string> target_words;
+	vector<string> context_words;
 public:
 	void clear()
 	{
-		target_word = "";
-		context_word = "";
+		target_words.clear();
+		context_words.clear();
 	}
 };
 
 class Example
 {
+private:
+	vector<double> neg_label;
+	vector<double> pos_label;
 public:
 	Feature m_feature;
-	vector<double> m_label;
-
+	vector<vector<double> > m_labels;
 public:
+	Example(){
+		neg_label.push_back(1);
+		neg_label.push_back(0);
+
+		pos_label.push_back(0);
+		pos_label.push_back(1);
+	}
+
 	void is_positive(){
-		m_label.clear();
-		m_label.push_back(1);
-		m_label.push_back(0);
+		m_labels.push_back(pos_label);
 	}
 	void is_negative(){
-		m_label.clear();
-		m_label.push_back(0);
-		m_label.push_back(1);
+		m_labels.push_back(neg_label);
 	}
 	void clear()
 	{
 		m_feature.clear();
-		m_label.clear();
+		m_labels.clear();
 	}
 };
 

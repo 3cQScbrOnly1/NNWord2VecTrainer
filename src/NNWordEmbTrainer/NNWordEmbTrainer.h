@@ -36,13 +36,14 @@ public:
 
 public:
 	void createWordStates(const string& file_name);
-	void addWord2States(const vector<Instance>& insts);
+	void addWord2Stats(const vector<Instance>& insts);
 	void train(const string& trainFile, const string& modelFile, const string& optionFile);
-	void convert2Example(const Instance* pInstance, vector<Example>& exam);
 	void trainEmb(const string& trainFile);
 	dtype trainInstances(const vector<Instance>& vecInst);
 	void createRandomTable();
-	void createNegWord(const string& context_word, vector<string>& neg_words);
-	void createNegExamples(const string& target_word, const vector<string>& neg_words, vector<Example>& neg_exams);
+	void createNegWords(const string& context_word, vector<string>& neg_words);
+	void createNegExample(const string& target_word, const vector<string>& neg_words, Example& exam);
+	void createPosExample(const string& target_word, const string& context_word, Example& exam);
+	void convert2Example(const Instance* pInstance, Example& exam);
 	void writeModelFile(const string& outputModelFile);
 };

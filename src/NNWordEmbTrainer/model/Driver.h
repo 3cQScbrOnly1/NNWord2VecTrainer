@@ -16,8 +16,7 @@
 
 class Driver{
 public:
-	Driver(int memsize, int thread_num) :_aligned_mem(memsize) {
-		_graph_num = thread_num * 8;
+	Driver(int memsize, int g_num) :_aligned_mem(memsize), _graph_num(g_num) {
 		_pcgs.resize(_graph_num);
 	}
 
@@ -60,6 +59,7 @@ public:
 		for (int idx = 0; idx < _graph_num; idx++)
 		{
 			_pcgs[idx] = new ComputionGraph();
+			_pcgs[idx]->createNodes(ComputionGraph::max_exam_size);
 			_pcgs[idx]->initial(_modelparams, _hyperparams, &_aligned_mem);
 		}
 
@@ -72,20 +72,20 @@ public:
 
 		int example_num = examples.size();
 		dtype cost = 0.0;
-
-		for (int count = 0; count < example_num; count += _graph_num) {
 #pragma omp parallel for
-			for (int offset = 0; offset < _graph_num; offset++) {
-				int exam_index = offset + count;
-				if (exam_index < example_num) {
-					const Example& example = examples[exam_index];
-					//forward
-					_pcgs[offset]->forward(example.m_feature, true);
-					cost += _modelparams.loss.loss(&_pcgs[offset]->_output, example.m_label, _eval, example_num);
-					// backward, which exists only for training 
-					_pcgs[offset]->backward();
-				} 
-			}
+		for (int count = 0; count < example_num; count ++) {
+			const Example& example = examples[count];
+			cout << "thread num: " << omp_get_thread_num() << ", graph: "<< count << endl;
+			//forward
+			_pcgs[count]->forward(example.m_feature, true);
+			int maxsize = example.m_feature.target_words.size();
+			if (maxsize > ComputionGraph::max_exam_size)
+				maxsize = ComputionGraph::max_exam_size;
+			for (int idx = 0; idx < maxsize; idx++)
+				cost += _modelparams.loss.loss(&_pcgs[count]->_outputs[idx], example.m_labels[idx], _eval, example_num);
+			// backward, which exists only for training 
+			_pcgs[count]->backward();
+			cout << "ok " <<  "thread num: " << omp_get_thread_num() << ", graph: "<< count << endl;
 		}
 
 		if (_eval.getAccuracy() < 0) {

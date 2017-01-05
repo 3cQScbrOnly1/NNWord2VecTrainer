@@ -2,11 +2,10 @@
 
 #include "Argument_helper.h"
 
-Trainer::Trainer(int memsize, int threadnum):m_driver(memsize, threadnum){
+Trainer::Trainer(int memsize, int graphnum):m_driver(memsize, graphnum){
 	instances_count = 0;
-	buffer_size = 100;
+	buffer_size = graphnum;
 	context_size = 2;
-	error_size = 5;
 	table_size = 1e8;
 	neg_word_size = 5;
 	table.resize(table_size);
@@ -27,13 +26,13 @@ void Trainer::createWordStates(const string& file_name) {
 		trainInstance.copyValuesFrom(*pInstance);
 		insts.emplace_back(trainInstance);
 		if (insts.size() == buffer_size) {
-			addWord2States(insts);
+			addWord2Stats(insts);
 			insts.clear();
 		}
 		pInstance = m_pipe.nextInstance();
 	}
 	if (insts.size() != 0)
-		addWord2States(insts);
+		addWord2Stats(insts);
 	m_pipe.uninitInputFile();
 	m_word_stats[START] = m_options.wordCutOff + 1;
 	m_word_stats[END] = m_options.wordCutOff + 1;
@@ -74,7 +73,7 @@ void Trainer::createRandomTable(){
 	}
 }
 
-void Trainer::createNegWord(const string& context_word, vector<string>& neg_words){
+void Trainer::createNegWords(const string& context_word, vector<string>& neg_words){
 	neg_words.clear();
 	int random_index, word_index;
 	for (int i = 0; i < neg_word_size; i++) {
@@ -89,20 +88,22 @@ void Trainer::createNegWord(const string& context_word, vector<string>& neg_word
 	}
 }
 
-void Trainer::createNegExamples(const string& target_word, const vector<string>& neg_words, vector<Example>& neg_exams){
-	neg_exams.clear();
+void Trainer::createNegExample(const string& target_word, const vector<string>& neg_words, Example& exam){
 	int neg_exam_size = neg_words.size();
 	for (int i = 0; i < neg_exam_size; i++) {
-		Example exam;
-		exam.m_feature.target_word = target_word;
-		exam.m_feature.context_word = neg_words[i];
+		exam.m_feature.target_words.emplace_back(target_word);
+		exam.m_feature.context_words.emplace_back(neg_words[i]);
 		exam.is_negative();
-		neg_exams.emplace_back(exam);
 	}
 }
 
+void Trainer::createPosExample(const string& target_word, const string& context_word, Example& exam){
+		exam.m_feature.target_words.emplace_back(target_word);
+		exam.m_feature.context_words.emplace_back(context_word);
+		exam.is_positive();
+}
 
-void Trainer::addWord2States(const vector<Instance>& vecInsts){
+void Trainer::addWord2Stats(const vector<Instance>& vecInsts){
 	int numInstance = vecInsts.size();
 	for (numInstance = 0; numInstance < vecInsts.size(); numInstance++) {
 		const Instance *pInstance = &vecInsts[numInstance];
@@ -121,42 +122,34 @@ void Trainer::addWord2States(const vector<Instance>& vecInsts){
 	cout << instances_count << " ";
 }
 
-void Trainer:: convert2Example(const Instance* pInstance, vector<Example>& vecExams){
-	vecExams.clear();
+void Trainer:: convert2Example(const Instance* pInstance, Example& exam){
 	vector<string> words = pInstance->m_words;
 	vector<string> neg_words;
-	vector<Example> neg_exams;
 	int word_size = words.size();
+	string curr_context_word;
 	for (int idx = 0; idx < words.size(); idx++) {
 		for (int offset = 1; offset <= context_size; offset++) {
-			Example exam;
-			exam.m_feature.target_word = words[idx];
+			neg_words.clear();
 			if (idx - offset < 0)
-				exam.m_feature.context_word = START;
+				curr_context_word = START;
 			else
-				exam.m_feature.context_word = words[idx - offset];
-			exam.is_positive();
-			vecExams.emplace_back(exam);
-			neg_words.clear();
-			createNegWord(exam.m_feature.context_word, neg_words);
-			neg_exams.clear();
-			createNegExamples(exam.m_feature.target_word, neg_words, neg_exams);
-			vecExams.insert(vecExams.end(), neg_exams.begin(), neg_exams.end());
+				curr_context_word = words[idx - offset];
+
+			createPosExample(words[idx], curr_context_word, exam);
+			createNegWords(curr_context_word, neg_words);
+			createNegExample(words[idx], neg_words, exam);
 		}
+
 		for (int offset = 1; offset <= context_size; offset++) {
-			Example exam;
-			exam.m_feature.target_word = words[idx];
-			if (idx + offset >= word_size)
-				exam.m_feature.context_word = END;
-			else
-				exam.m_feature.context_word = words[idx + offset];
-			exam.is_positive();
-			vecExams.emplace_back(exam);
 			neg_words.clear();
-			createNegWord(exam.m_feature.context_word, neg_words);
-			neg_exams.clear();
-			createNegExamples(exam.m_feature.target_word, neg_words, neg_exams);
-			vecExams.insert(vecExams.end(), neg_exams.begin(), neg_exams.end());
+			if (idx + offset >= word_size)
+				curr_context_word = END;
+			else
+				curr_context_word = words[idx + offset];
+
+			createPosExample(words[idx], curr_context_word, exam);
+			createNegWords(curr_context_word, neg_words);
+			createNegExample(words[idx], neg_words, exam);
 		}
 	}
 }
@@ -172,9 +165,9 @@ void Trainer::train(const string& trainFile, const string& modelFile, const stri
 	m_driver.initial();
 	createRandomTable();
 	trainEmb(trainFile);
-	cout << "Saving model..." << endl;
-	writeModelFile(modelFile);
-	cout << "Save complete!" << endl;
+	//cout << "Saving model..." << endl;
+	//writeModelFile(modelFile);
+	//cout << "Save complete!" << endl;
 }
 
 void Trainer::writeModelFile(const string& outputModelFile) {
@@ -193,20 +186,23 @@ dtype Trainer::trainInstances(const vector<Instance>& vecInst){
 	int vecSize = vecInst.size();
 	int examSize;
 	dtype cost = 0;
-	vector<Example> exams;
-	static vector<Example> subExamples;
+	Example exam;
 	clock_t start_time = clock();
+	vector<Example> vecExams;
 	for (int idx = 0; idx < vecSize; idx++) {
-		exams.clear();
-		convert2Example(&vecInst[idx], exams);
+		exam.clear();
+		convert2Example(&vecInst[idx], exam);
+		vecExams.push_back(exam);
 		//examSize = exams.size();
 		//for (int idy = 0; idy < examSize; idy++) {
 			//subExamples.clear();
 			//subExamples.emplace_back(exams[idy]);
-		cost += m_driver.train(exams, 1);
+		//cost += m_driver.train(exams, 1);
 		//}
-		m_driver.updateModel();
+		//m_driver.updateModel();
 	}
+	cost += m_driver.train(vecExams, 1);
+	m_driver.updateModel();
 	cout << "one buffer cost time :" << (clock() - start_time) / CLOCKS_PER_SEC  << endl;
 	return cost;
 }
@@ -264,8 +260,10 @@ int main(int argc, char* argv[]) {
 	cout << "Thread num: "<<  thread << endl;
 	omp_set_num_threads(thread);
 
-	Trainer the_trainer(memsize, thread);
+	int graph_num = 100;
+	Trainer the_trainer(memsize, graph_num);
 	the_trainer.train(trainFile, modelFile, optionFile);
+	getchar();
 	/*
 	if (bTrain) {
 		the_classifier.train(trainFile, devFile, testFile, modelFile, optionFile);
