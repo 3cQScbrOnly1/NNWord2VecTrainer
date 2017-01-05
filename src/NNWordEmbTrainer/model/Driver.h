@@ -75,7 +75,7 @@ public:
 #pragma omp parallel for
 		for (int count = 0; count < example_num; count ++) {
 			const Example& example = examples[count];
-			cout << "thread num: " << omp_get_thread_num() << ", graph: "<< count << endl;
+			//cout << "thread num: " << omp_get_thread_num() << ", graph: "<< count << endl;
 			//forward
 			_pcgs[count]->forward(example.m_feature, true);
 			int maxsize = example.m_feature.target_words.size();
@@ -85,7 +85,7 @@ public:
 				cost += _modelparams.loss.loss(&_pcgs[count]->_outputs[idx], example.m_labels[idx], _eval, example_num);
 			// backward, which exists only for training 
 			_pcgs[count]->backward();
-			cout << "ok " <<  "thread num: " << omp_get_thread_num() << ", graph: "<< count << endl;
+			//cout << "ok " <<  "thread num: " << omp_get_thread_num() << ", graph: "<< count << endl;
 		}
 
 		if (_eval.getAccuracy() < 0) {

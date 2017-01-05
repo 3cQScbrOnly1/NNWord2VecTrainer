@@ -263,7 +263,6 @@ int main(int argc, char* argv[]) {
 	int graph_num = 100;
 	Trainer the_trainer(memsize, graph_num);
 	the_trainer.train(trainFile, modelFile, optionFile);
-	getchar();
 	/*
 	if (bTrain) {
 		the_classifier.train(trainFile, devFile, testFile, modelFile, optionFile);
