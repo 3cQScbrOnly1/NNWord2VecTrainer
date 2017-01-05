@@ -164,10 +164,12 @@ void Trainer::train(const string& trainFile, const string& modelFile, const stri
 	m_driver._modelparams.words.initial(&m_driver._modelparams.wordAlpha, m_options.wordEmbSize, true);
 	m_driver.initial();
 	createRandomTable();
+	clock_t start_time = clock();
 	trainEmb(trainFile);
-	//cout << "Saving model..." << endl;
-	//writeModelFile(modelFile);
-	//cout << "Save complete!" << endl;
+	cout << endl << "Training cost time :" << (clock() - start_time) / CLOCKS_PER_SEC  << endl;
+	cout << "Saving model..." << endl;
+	writeModelFile(modelFile);
+	cout << "Save complete!" << endl;
 }
 
 void Trainer::writeModelFile(const string& outputModelFile) {
