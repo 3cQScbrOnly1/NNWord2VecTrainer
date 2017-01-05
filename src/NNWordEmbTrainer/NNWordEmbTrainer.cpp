@@ -188,21 +188,13 @@ dtype Trainer::trainInstances(const vector<Instance>& vecInst){
 	int vecSize = vecInst.size();
 	int examSize;
 	dtype cost = 0;
-	Example exam;
-	vector<Example> vecExams;
+	vector<Example> vecExams(vecSize);
 	clock_t start_time = clock();
+#pragma omp parallel for
 	for (int idx = 0; idx < vecSize; idx++) {
-		exam.clear();
-		convert2Example(&vecInst[idx], exam);
-		vecExams.push_back(exam);
-		//examSize = exams.size();
-		//for (int idy = 0; idy < examSize; idy++) {
-			//subExamples.clear();
-			//subExamples.emplace_back(exams[idy]);
-		//cost += m_driver.train(exams, 1);
-		//}
-		//m_driver.updateModel();
+		convert2Example(&vecInst[idx], vecExams[idx]);
 	}
+
 	cost += m_driver.train(vecExams, 1);
 	m_driver.updateModel();
 	cout << "one buffer cost time :" << (clock() - start_time) / CLOCKS_PER_SEC  << endl;
