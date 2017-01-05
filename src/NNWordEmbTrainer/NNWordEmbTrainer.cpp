@@ -187,8 +187,8 @@ dtype Trainer::trainInstances(const vector<Instance>& vecInst){
 	int examSize;
 	dtype cost = 0;
 	Example exam;
-	clock_t start_time = clock();
 	vector<Example> vecExams;
+	clock_t start_time = clock();
 	for (int idx = 0; idx < vecSize; idx++) {
 		exam.clear();
 		convert2Example(&vecInst[idx], exam);
