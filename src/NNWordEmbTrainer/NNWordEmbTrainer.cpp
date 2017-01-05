@@ -245,25 +245,26 @@ int main(int argc, char* argv[]) {
 	std::string outputFile = "";
 	bool bTrain = false;
 	int memsize = 0;
-	int thread = 1;
+	int graphNum = 100;
+	int threadNum = 1;
 	dsr::Argument_helper ah;
 
 	ah.new_named_string("train", "trainCorpus", "named_string", "training corpus to train a model, must when training", trainFile);
 	ah.new_named_string("model", "modelFile", "named_string", "model file, must when training and testing", modelFile);
 	ah.new_named_string("option", "optionFile", "named_string", "option file to train a model, optional when training", optionFile);
 	ah.new_named_int("memsize", "memorySize", "named_int", "This argument decides the size of static memory allocation", memsize);
-	ah.new_named_int("thread", "thread num", "named_int", "The thread size", thread);
+	ah.new_named_int("thread", "thread num", "named_int", "The thread size", threadNum);
+	ah.new_named_int("graph", "graph num", "named_int", "The graph size", graphNum);
 
 	ah.process(argc, argv);
 
 	if (memsize < 0)
 		memsize = 0;
 	//omp_set_num_threads(thread);
-	cout << "Thread num: "<<  thread << endl;
-	omp_set_num_threads(thread);
+	cout << "Thread num: "<<  threadNum << endl;
+	omp_set_num_threads(threadNum);
 
-	int graph_num = 100;
-	Trainer the_trainer(memsize, graph_num);
+	Trainer the_trainer(memsize, graphNum);
 	the_trainer.train(trainFile, modelFile, optionFile);
 	/*
 	if (bTrain) {
