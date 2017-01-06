@@ -78,13 +78,13 @@ public:
 				if (curr_id < example_num)
 				{
 					const Example& example = examples[curr_id];
-					//cout << "thread num: " << omp_get_thread_num() << ", graph: " << curr_id << endl;
+					cout << "thread num: " << omp_get_thread_num() << ", graph: " << curr_id << endl;
 					//forward
 					_pcgs[offset]->forward(example.m_feature, true);
 					cost += _modelparams.loss.loss(&_pcgs[offset]->_output, example.m_label, _eval, example_num);
 					// backward, which exists only for training 
 					_pcgs[offset]->backward();
-					//cout << "ok " << "thread num: " << omp_get_thread_num() << ", graph: " << curr_id << endl;
+					cout << "ok " << "thread num: " << omp_get_thread_num() << ", graph: " << curr_id << endl;
 				}
 			}
 
