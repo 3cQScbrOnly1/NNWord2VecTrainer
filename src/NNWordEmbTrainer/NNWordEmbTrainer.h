@@ -44,6 +44,8 @@ public:
 	void createNegWords(const string& context_word, vector<string>& neg_words);
 	void createNegExample(const string& target_word, const vector<string>& neg_words, Example& exam);
 	void createPosExample(const string& target_word, const string& context_word, Example& exam);
-	void convert2Example(const Instance* pInstance, Example& exam);
+	void addNegExample(const int& target_word_index, const vector<int>& vec_context_words, vector<Example>& vecExams);
+	void addPosExample(const int& target_word_index, const int& context_word_index, vector<Example>& vecExams);
+	void convert2Examples(const Instance* pInstance, vector<Example>& vecExam);
 	void writeModelFile(const string& outputModelFile);
 };
