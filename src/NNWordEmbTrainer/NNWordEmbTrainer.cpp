@@ -2,15 +2,14 @@
 
 #include "Argument_helper.h"
 
-Trainer::Trainer(int memsize, int graphnum):m_driver(memsize, graphnum){
+Trainer::Trainer(int memsize, int graphnum, int buffersize):m_driver(memsize, graphnum), buffer_size(buffersize){
 	instances_count = 0;
-	buffer_size = 500;
 	context_size = 2;
 	table_size = 1e8;
 	neg_word_size = 5;
 	table.resize(table_size);
-	START = "<s>";
-	END = "</s>";
+	START = "-start-";
+	END = "-end-";
 }
 
 Trainer::~Trainer(){
@@ -188,8 +187,8 @@ void Trainer::train(const string& trainFile, const string& modelFile, const stri
 	time_t end_time = time(NULL);
 	cout << endl << "Training cost time :" << end_time - start_time  << endl;
 	cout << "Saving model..." << endl;
-	//writeModelFile(modelFile);
-	//cout << "Save complete!" << endl;
+	writeModelFile(modelFile);
+	cout << "Save complete!" << endl;
 }
 
 void Trainer::writeModelFile(const string& outputModelFile) {
@@ -222,6 +221,7 @@ dtype Trainer::trainInstances(const vector<Instance>& vecInst){
 	for (int idx = 0; idx < vecSize; idx++) {
 		vecExams.insert(vecExams.end(), all_exams[idx].begin(), all_exams[idx].end());
 	}
+	end_time = time(NULL);
 	cout << "insert time :" << end_time - start_time << endl;
 
 	random_shuffle(vecExams.begin(), vecExams.end());
@@ -275,6 +275,7 @@ int main(int argc, char* argv[]) {
 	int memsize = 0;
 	int graphNum = 100;
 	int threadNum = 1;
+	int bufferSize = 100;
 	dsr::Argument_helper ah;
 
 	ah.new_named_string("train", "trainCorpus", "named_string", "training corpus to train a model, must when training", trainFile);
@@ -282,7 +283,7 @@ int main(int argc, char* argv[]) {
 	ah.new_named_string("option", "optionFile", "named_string", "option file to train a model, optional when training", optionFile);
 	ah.new_named_int("memsize", "memorySize", "named_int", "This argument decides the size of static memory allocation", memsize);
 	ah.new_named_int("thread", "thread num", "named_int", "The thread size", threadNum);
-	ah.new_named_int("graph", "graph num", "named_int", "The graph size", graphNum);
+	ah.new_named_int("buffer", "buffer size", "named_int", "The buffer size", bufferSize);
 
 	ah.process(argc, argv);
 
@@ -292,7 +293,7 @@ int main(int argc, char* argv[]) {
 	cout << "Thread num: "<<  threadNum << endl;
 	omp_set_num_threads(threadNum);
 
-	Trainer the_trainer(memsize, threadNum);
+	Trainer the_trainer(memsize, threadNum, bufferSize);
 	the_trainer.train(trainFile, modelFile, optionFile);
 	/*
 	if (bTrain) {

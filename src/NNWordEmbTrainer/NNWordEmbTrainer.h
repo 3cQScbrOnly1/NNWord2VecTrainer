@@ -31,7 +31,7 @@ public:
 	Pipe m_pipe;
 
 public:
-	Trainer(int memsize, int threadnum);
+	Trainer(int memsize, int threadnum, int buffersize);
 	virtual ~Trainer();
 
 public:
