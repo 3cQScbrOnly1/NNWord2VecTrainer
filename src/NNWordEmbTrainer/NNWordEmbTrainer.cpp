@@ -136,7 +136,7 @@ void Trainer::addWord2Stats(const vector<Instance>& vecInsts){
 }
 
 void Trainer:: convert2Examples(const Instance* pInstance, vector<Example>& vecExam){
-	vector<string> words = pInstance->m_words;
+	const vector<string>& words = pInstance->m_words;
 	vector<string> neg_words;
 	int word_size = words.size();
 	string curr_context_word;
